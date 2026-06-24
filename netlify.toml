@@ -1,0 +1,17 @@
+# Netlify configuration for TimeMarket.
+# Importing this repo in the Netlify UI auto-detects these settings.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  # Netlify serves at the domain root, so the Vite base stays "/".
+  DEPLOY_BASE = "/"
+
+# SPA fallback so deep links resolve to the app shell.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

@@ -1,10 +1,14 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// Project is served from https://ankitjm.github.io/Bookmytime/ on GitHub Pages,
-// so production assets need the repo name as the base path. Dev stays at root.
-export default defineConfig(({ command }) => ({
+// Base path is deploy-target specific:
+//   - Netlify / Vercel / local preview serve at the domain root  -> '/'
+//   - GitHub Pages serves under the repo name -> '/Bookmytime/' (set via DEPLOY_BASE)
+// Set DEPLOY_BASE in the deploy environment to override; defaults to root.
+const base = process.env.DEPLOY_BASE || '/'
+
+export default defineConfig({
   plugins: [react()],
-  base: command === 'build' ? '/Bookmytime/' : '/',
+  base,
   server: { host: true },
-}))
+})
