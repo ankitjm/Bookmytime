@@ -1,112 +1,151 @@
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { PEOPLE } from '../data';
-import { useMarket } from '../store';
+import { fmtWhen } from '../market';
+import { useStore } from '../store';
 
 const byId = Object.fromEntries(PEOPLE.map((p) => [p.id, p]));
 
-export function BookingsPage() {
-  const { portfolio, completeBooking } = useMarket();
-  const bookings = portfolio.bookings;
+type Tab = 'mine' | 'me';
 
-  const upcoming = bookings.filter((b) => b.status === 'SCHEDULED');
-  const past = bookings.filter((b) => b.status === 'COMPLETED');
+export function BookingsPage() {
+  const { state, completeBooking } = useStore();
+  const [tab, setTab] = useState<Tab>('mine');
+
+  const upcoming = state.bookings.filter((b) => b.status === 'UPCOMING');
+  const past = state.bookings.filter((b) => b.status === 'DONE');
+  const bookedYou = state.incoming.filter((r) => r.status === 'ACCEPTED');
 
   return (
     <div className="container">
       <div className="page-head">
         <div>
-          <h1>My Bookings</h1>
-          <p>Hours you've redeemed into real, scheduled meetings.</p>
+          <h1>Bookings</h1>
+          <p>Your hours with others, and theirs with you.</p>
         </div>
-        <span className="pill">{upcoming.length} upcoming</span>
       </div>
 
-      {bookings.length === 0 ? (
-        <div className="card">
-          <div className="empty">
-            <div className="big">📅</div>
-            No bookings yet. Own an hour, then hit{' '}
-            <strong style={{ color: 'var(--text)' }}>Book the hour</strong> on any trade page to
-            schedule it.
-            <div style={{ marginTop: 14 }}>
-              <Link className="trade-btn" to="/" style={{ display: 'inline-block' }}>
-                Browse the floor
-              </Link>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="card" style={{ marginBottom: 16 }}>
-            <h3>Upcoming</h3>
-            {upcoming.length === 0 ? (
-              <div className="empty" style={{ padding: 26 }}>
-                Nothing scheduled.
+      <div className="tabs">
+        <button className={tab === 'mine' ? 'active' : ''} onClick={() => setTab('mine')}>
+          You booked
+        </button>
+        <button className={tab === 'me' ? 'active' : ''} onClick={() => setTab('me')}>
+          Booked you
+        </button>
+      </div>
+
+      <AnimatePresence mode="wait">
+        {tab === 'mine' ? (
+          <motion.div
+            key="mine"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {upcoming.length === 0 && past.length === 0 ? (
+              <div className="card soft empty">
+                <div className="big">📅</div>
+                No bookings yet.{' '}
+                <Link to="/people" className="link-accent">
+                  Find someone
+                </Link>{' '}
+                and book your first hour.
               </div>
             ) : (
-              upcoming.map((b) => {
-                const p = byId[b.personId];
-                const dt = new Date(b.when);
+              <>
+                {upcoming.length > 0 && <div className="list-label">Upcoming</div>}
+                {upcoming.map((b) => {
+                  const p = byId[b.personId];
+                  const w = fmtWhen(b.when);
+                  return (
+                    <motion.div className="b-card" key={b.id} layout whileTap={{ scale: 0.99 }}>
+                      <div
+                        className="avatar"
+                        style={
+                          p
+                            ? { background: `linear-gradient(135deg, ${p.gradient[0]}, ${p.gradient[1]})` }
+                            : undefined
+                        }
+                      >
+                        {p?.avatar ?? '👤'}
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="b-name">{p?.name ?? 'Someone'}</div>
+                        <div className="b-topic">{b.topic}</div>
+                        <div className="b-when">
+                          {w.date} · {w.time}
+                        </div>
+                      </div>
+                      <button className="link-btn" onClick={() => completeBooking(b.id)}>
+                        Done
+                      </button>
+                    </motion.div>
+                  );
+                })}
+
+                {past.length > 0 && <div className="list-label">Past</div>}
+                {past.map((b) => {
+                  const p = byId[b.personId];
+                  const w = fmtWhen(b.when);
+                  return (
+                    <div className="b-card faded" key={b.id}>
+                      <div className="avatar">{p?.avatar ?? '👤'}</div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div className="b-name">{p?.name ?? 'Someone'}</div>
+                        <div className="b-topic">{b.topic}</div>
+                        <div className="b-when">
+                          {w.date} · {w.time}
+                        </div>
+                      </div>
+                      <span className="badge done">✓ Done</span>
+                    </div>
+                  );
+                })}
+              </>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="me"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.2 }}
+          >
+            {bookedYou.length === 0 ? (
+              <div className="card soft empty">
+                <div className="big">⏳</div>
+                Nobody's confirmed yet. Accept a request on{' '}
+                <Link to="/" className="link-accent">
+                  your profile
+                </Link>
+                .
+              </div>
+            ) : (
+              bookedYou.map((r) => {
+                const w = fmtWhen(r.when);
                 return (
-                  <div className="booking" key={b.id}>
-                    <div className="avatar">{p.avatar}</div>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>
-                        {p.name} <span style={{ color: 'var(--muted)' }}>· {p.ticker}</span>
+                  <div className="b-card" key={r.id}>
+                    <div className="avatar">{r.fromAvatar}</div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="b-name">
+                        {r.fromName} <span className="rel-tag">{r.relationship}</span>
                       </div>
-                      <div className="when">
-                        {dt.toLocaleDateString([], {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        })}{' '}
-                        ·{' '}
-                        {dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
-                        {b.topic}
+                      <div className="b-topic">{r.topic}</div>
+                      <div className="b-when">
+                        {w.date} · {w.time}
                       </div>
                     </div>
-                    <span className="badge sched">Scheduled</span>
-                    <button className="link-btn" onClick={() => completeBooking(b.id)}>
-                      Mark complete
-                    </button>
+                    <span className="badge done">✓ Confirmed</span>
                   </div>
                 );
               })
             )}
-          </div>
-
-          {past.length > 0 && (
-            <div className="card">
-              <h3>Past</h3>
-              {past.map((b) => {
-                const p = byId[b.personId];
-                const dt = new Date(b.when);
-                return (
-                  <div className="booking" key={b.id}>
-                    <div className="avatar">{p.avatar}</div>
-                    <div>
-                      <div style={{ fontWeight: 700 }}>
-                        {p.name} <span style={{ color: 'var(--muted)' }}>· {p.ticker}</span>
-                      </div>
-                      <div className="when">
-                        {dt.toLocaleDateString()} ·{' '}
-                        {dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </div>
-                      <div style={{ fontSize: 13, color: 'var(--muted)', marginTop: 2 }}>
-                        {b.topic}
-                      </div>
-                    </div>
-                    <span className="badge done">Completed</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
