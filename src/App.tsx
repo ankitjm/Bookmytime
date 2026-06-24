@@ -13,13 +13,32 @@ function AccountStrip() {
     <div className="account">
       <div className="acct-stat">
         <div className="label">Buying Power</div>
-        <div className="val mono">TIME$ {fmtMoney(portfolio.cash)}</div>
+        <div className="val mono">{fmtMoney(portfolio.cash)}</div>
       </div>
       <div className="acct-stat">
         <div className="label">Net Worth</div>
-        <div className="val mono">TIME$ {fmtMoney(netWorth)}</div>
+        <div className="val mono">{fmtMoney(netWorth)}</div>
       </div>
     </div>
+  );
+}
+
+function BottomNav() {
+  return (
+    <nav className="tabbar">
+      <NavLink to="/" end>
+        <span className="ic">📊</span>
+        Market
+      </NavLink>
+      <NavLink to="/portfolio">
+        <span className="ic">💼</span>
+        Portfolio
+      </NavLink>
+      <NavLink to="/bookings">
+        <span className="ic">📅</span>
+        Bookings
+      </NavLink>
+    </nav>
   );
 }
 
@@ -30,7 +49,7 @@ function Shell() {
         <NavLink to="/" className="brand">
           <span className="logo">⏱️</span>
           <span>
-            Time<span style={{ color: 'var(--up)' }}>Market</span> <small>EXCHANGE</small>
+            Time<span style={{ color: 'var(--accent)' }}>Market</span> <small>EXCHANGE</small>
           </span>
         </NavLink>
         <nav className="nav">
@@ -50,18 +69,11 @@ function Shell() {
         <Route path="/bookings" element={<BookingsPage />} />
         <Route path="*" element={<MarketPage />} />
       </Routes>
-      <footer
-        style={{
-          borderTop: '1px solid var(--line)',
-          padding: '16px 22px',
-          color: 'var(--muted)',
-          fontSize: 12,
-          textAlign: 'center',
-        }}
-      >
-        TimeMarket is a simulated exchange for entertainment. Prices, people and timeslots are
-        fictional. No real hours were harmed. · Paper-trading with TIME$.
+      <footer className="foot">
+        TimeMarket is a simulated exchange for entertainment. People, prices and timeslots are
+        fictional. Paper-trading with TIME$.
       </footer>
+      <BottomNav />
     </div>
   );
 }

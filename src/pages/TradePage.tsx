@@ -16,16 +16,13 @@ export function TradePage() {
   const [side, setSide] = useState<Side>('BUY');
   const [hours, setHours] = useState('1');
   const [toast, setToast] = useState<{ ok: boolean; msg: string } | null>(null);
-
-  // Booking form state.
   const [when, setWhen] = useState('');
   const [topic, setTopic] = useState('');
 
   const holding = holdingFor(id);
 
-  const book6 = useMemo(
+  const orderBook = useMemo(
     () => (quote ? buildOrderBook(quote.price, id.length * 7 + 13) : { bids: [], asks: [] }),
-    // Rebuild book roughly each time price crosses an integer; cheap + stable enough.
     [quote?.price, id],
   );
 
@@ -53,7 +50,6 @@ export function TradePage() {
     const res = trade(id, side, qty);
     setToast({ ok: res.ok, msg: res.message });
   };
-
   const submitBooking = () => {
     const res = book(id, when, topic);
     setToast({ ok: res.ok, msg: res.message });
@@ -63,42 +59,51 @@ export function TradePage() {
     }
   };
 
-  const maxDepth = Math.max(...book6.bids.map((b) => b.hours), ...book6.asks.map((a) => a.hours), 1);
+  const maxDepth = Math.max(
+    ...orderBook.bids.map((b) => b.hours),
+    ...orderBook.asks.map((a) => a.hours),
+    1,
+  );
 
   return (
     <div className="container">
       <Link className="back" to="/">
-        ← Back to the floor
+        ← The Floor
       </Link>
 
       <div className="trade-layout">
-        {/* LEFT: quote, chart, book, thesis */}
-        <div>
+        <div className="trade-main">
+          {/* Quote + chart */}
           <div className="card">
             <div className="quote-hero">
               <div className="avatar">{person.avatar}</div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <h1>
                   {person.ticker}{' '}
-                  <span style={{ color: 'var(--muted)', fontWeight: 500, fontSize: 16 }}>
+                  <span style={{ color: 'var(--muted)', fontWeight: 600, fontSize: 14 }}>
                     {person.name}
                   </span>
                 </h1>
-                <div className="sub">
-                  {person.title} · <span className="sector-tag">{person.sector}</span>
-                </div>
-              </div>
-              <div style={{ textAlign: 'right' }}>
-                <div className="big-price">{fmtMoney(quote.price)}</div>
-                <div className={`big-chg ${up ? 'up' : 'down'}`}>
-                  {up ? '▲' : '▼'} {fmtMoney(Math.abs(quote.change))} ({Math.abs(quote.changePct).toFixed(2)}%)
-                </div>
+                <div className="sub">{person.title}</div>
               </div>
             </div>
 
-            <PriceChart data={quote.history} />
+            <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 12 }}>
+              <div>
+                <div className="big-price">{fmtMoney(quote.price)}</div>
+                <div className={`big-chg ${up ? 'up' : 'down'}`}>
+                  {up ? '▲' : '▼'} {fmtMoney(Math.abs(quote.change))} (
+                  {Math.abs(quote.changePct).toFixed(2)}%)
+                </div>
+              </div>
+              <span className="sector-tag">{person.sector}</span>
+            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginTop: 8 }}>
+            <div style={{ marginTop: 12 }}>
+              <PriceChart data={quote.history} />
+            </div>
+
+            <div className="minstats">
               <MiniStat k="Bid" v={fmtMoney(bid)} />
               <MiniStat k="Ask" v={fmtMoney(ask)} />
               <MiniStat k="Day High" v={fmtMoney(quote.dayHigh)} />
@@ -106,11 +111,11 @@ export function TradePage() {
             </div>
           </div>
 
-          <div className="grid" style={{ gridTemplateColumns: '1fr 1fr', marginTop: 16 }}>
+          <div className="book-stats">
             <div className="card">
               <h3>Order Book</h3>
               <div className="book-table">
-                {book6.asks
+                {orderBook.asks
                   .slice()
                   .reverse()
                   .map((a, i) => (
@@ -124,7 +129,7 @@ export function TradePage() {
                 <div className="book-spread">
                   SPREAD {fmtMoney(ask - bid)} · LAST {fmtMoney(quote.price)}
                 </div>
-                {book6.bids.map((b, i) => (
+                {orderBook.bids.map((b, i) => (
                   <div className="book-row bid" key={`b${i}`}>
                     <div className="depth" style={{ width: `${(b.hours / maxDepth) * 100}%` }} />
                     <span className="price up">{fmtMoney(b.price)}</span>
@@ -151,127 +156,129 @@ export function TradePage() {
                 />
                 <Stat k="IPO price" v={`TIME$ ${fmtMoney(person.ipoPrice)}`} />
                 {holding && (
-                  <Stat
-                    k="Your position"
-                    v={`${holding.hours}h @ ${fmtMoney(holding.avgCost)}`}
-                  />
+                  <Stat k="Your position" v={`${holding.hours}h @ ${fmtMoney(holding.avgCost)}`} />
                 )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT: trade ticket */}
-        <div className="card ticket">
-          <div className="tabs">
-            <button className={mode === 'trade' ? 'active' : ''} onClick={() => setMode('trade')}>
-              Trade
-            </button>
-            <button className={mode === 'book' ? 'active' : ''} onClick={() => setMode('book')}>
-              Book the hour
-            </button>
+        {/* Trade ticket */}
+        <div className="trade-side">
+          <div className="card ticket">
+            <div className="tabs">
+              <button className={mode === 'trade' ? 'active' : ''} onClick={() => setMode('trade')}>
+                Trade
+              </button>
+              <button className={mode === 'book' ? 'active' : ''} onClick={() => setMode('book')}>
+                Book the hour
+              </button>
+            </div>
+
+            {mode === 'trade' ? (
+              <>
+                <div className="seg2">
+                  <button
+                    className={`buy ${side === 'BUY' ? 'active' : ''}`}
+                    onClick={() => setSide('BUY')}
+                  >
+                    Buy
+                  </button>
+                  <button
+                    className={`sell ${side === 'SELL' ? 'active' : ''}`}
+                    onClick={() => setSide('SELL')}
+                  >
+                    Sell
+                  </button>
+                </div>
+
+                <div className="field">
+                  <label>Hours ({person.ticker})</label>
+                  <input
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    value={hours}
+                    onChange={(e) => setHours(e.target.value)}
+                  />
+                  <div className="steppers">
+                    {[1, 5, 10, 25].map((n) => (
+                      <button key={n} onClick={() => setHours(String(n))}>
+                        {n}h
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="order-summary">
+                  <div className="row">
+                    <span>Order type</span>
+                    <span className="v">Market</span>
+                  </div>
+                  <div className="row">
+                    <span>Est. fill price</span>
+                    <span className="v">{fmtMoney(fillPrice)}</span>
+                  </div>
+                  <div className="row total">
+                    <span>{side === 'BUY' ? 'Est. cost' : 'Est. proceeds'}</span>
+                    <span className="v">TIME$ {fmtMoney(estTotal)}</span>
+                  </div>
+                </div>
+
+                <button
+                  className={`submit ${side === 'BUY' ? 'buy' : 'sell'}`}
+                  disabled={qty <= 0}
+                  onClick={submitTrade}
+                >
+                  {side === 'BUY' ? 'Buy' : 'Sell'} {qty || 0}h of {person.ticker}
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="thesis" style={{ marginTop: 0 }}>
+                  Redeem <strong style={{ color: 'var(--text)' }}>1 hour</strong> from your position
+                  to schedule a real meeting with {person.name}.
+                </p>
+                <div className="order-summary" style={{ marginBottom: 16 }}>
+                  <div className="row">
+                    <span>Hours owned</span>
+                    <span className="v">{holding?.hours ?? 0}h</span>
+                  </div>
+                  <div className="row total">
+                    <span>Cost to book</span>
+                    <span className="v">1h slot</span>
+                  </div>
+                </div>
+
+                <div className="field">
+                  <label>Date & time</label>
+                  <input
+                    type="datetime-local"
+                    value={when}
+                    onChange={(e) => setWhen(e.target.value)}
+                  />
+                </div>
+                <div className="field">
+                  <label>What's the agenda?</label>
+                  <textarea
+                    placeholder="e.g. Mentorship on scaling my startup…"
+                    value={topic}
+                    onChange={(e) => setTopic(e.target.value)}
+                  />
+                </div>
+
+                <button
+                  className="submit brand"
+                  disabled={!holding || holding.hours < 1}
+                  onClick={submitBooking}
+                >
+                  {holding && holding.hours >= 1 ? 'Confirm booking' : 'Buy an hour first'}
+                </button>
+              </>
+            )}
+
+            {toast && <div className={`toast ${toast.ok ? 'ok' : 'err'}`}>{toast.msg}</div>}
           </div>
-
-          {mode === 'trade' ? (
-            <>
-              <div className="seg">
-                <button
-                  className={`buy ${side === 'BUY' ? 'active' : ''}`}
-                  onClick={() => setSide('BUY')}
-                >
-                  Buy
-                </button>
-                <button
-                  className={`sell ${side === 'SELL' ? 'active' : ''}`}
-                  onClick={() => setSide('SELL')}
-                >
-                  Sell
-                </button>
-              </div>
-
-              <div className="field">
-                <label>Hours ({person.ticker})</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
-                />
-                <div className="steppers">
-                  {[1, 5, 10, 25].map((n) => (
-                    <button key={n} onClick={() => setHours(String(n))}>
-                      {n}h
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="order-summary">
-                <div className="row">
-                  <span>Order type</span>
-                  <span className="v">Market</span>
-                </div>
-                <div className="row">
-                  <span>Est. fill price</span>
-                  <span className="v">{fmtMoney(fillPrice)}</span>
-                </div>
-                <div className="row total">
-                  <span>{side === 'BUY' ? 'Est. cost' : 'Est. proceeds'}</span>
-                  <span className="v">TIME$ {fmtMoney(estTotal)}</span>
-                </div>
-              </div>
-
-              <button
-                className={`submit ${side === 'BUY' ? 'buy' : 'sell'}`}
-                disabled={qty <= 0}
-                onClick={submitTrade}
-              >
-                {side === 'BUY' ? 'Buy' : 'Sell'} {qty || 0}h of {person.ticker}
-              </button>
-            </>
-          ) : (
-            <>
-              <p className="thesis" style={{ marginTop: 0 }}>
-                Redeem <strong style={{ color: 'var(--text)' }}>1 hour</strong> from your position to
-                schedule a real meeting with {person.name}.
-              </p>
-              <div className="order-summary" style={{ marginBottom: 16 }}>
-                <div className="row">
-                  <span>Hours owned</span>
-                  <span className="v">{holding?.hours ?? 0}h</span>
-                </div>
-                <div className="row total">
-                  <span>Cost to book</span>
-                  <span className="v">1h slot</span>
-                </div>
-              </div>
-
-              <div className="field">
-                <label>Date & time</label>
-                <input type="datetime-local" value={when} onChange={(e) => setWhen(e.target.value)} />
-              </div>
-              <div className="field">
-                <label>What's the agenda?</label>
-                <textarea
-                  placeholder="e.g. Mentorship on scaling my startup…"
-                  value={topic}
-                  onChange={(e) => setTopic(e.target.value)}
-                />
-              </div>
-
-              <button
-                className="submit buy"
-                disabled={!holding || holding.hours < 1}
-                onClick={submitBooking}
-              >
-                {holding && holding.hours >= 1 ? 'Confirm booking' : 'Buy an hour first'}
-              </button>
-            </>
-          )}
-
-          {toast && (
-            <div className={`toast ${toast.ok ? 'ok' : 'err'}`}>{toast.msg}</div>
-          )}
         </div>
       </div>
     </div>
@@ -280,20 +287,9 @@ export function TradePage() {
 
 function MiniStat({ k, v }: { k: string; v: string }) {
   return (
-    <div
-      style={{
-        background: 'var(--bg-2)',
-        border: '1px solid var(--line)',
-        borderRadius: 9,
-        padding: '10px 12px',
-      }}
-    >
-      <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)' }}>
-        {k}
-      </div>
-      <div className="mono" style={{ fontWeight: 600, marginTop: 3 }}>
-        {v}
-      </div>
+    <div className="minstat">
+      <div className="k">{k}</div>
+      <div className="v">{v}</div>
     </div>
   );
 }

@@ -7,6 +7,13 @@ import { Sparkline } from '../components/Charts';
 
 type SortKey = 'price' | 'changePct' | 'volume' | 'cap';
 
+const SORTS: [SortKey, string][] = [
+  ['changePct', '% Change'],
+  ['price', 'Price'],
+  ['volume', 'Volume'],
+  ['cap', 'Mkt Cap'],
+];
+
 export function MarketPage() {
   const { quotes } = useMarket();
   const navigate = useNavigate();
@@ -14,15 +21,14 @@ export function MarketPage() {
   const [sort, setSort] = useState<SortKey>('changePct');
 
   const rows = useMemo(() => {
-    const list = PEOPLE.filter((p) => {
-      const q = (query || '').toLowerCase();
-      return (
+    const q = query.trim().toLowerCase();
+    const list = PEOPLE.filter(
+      (p) =>
         !q ||
         p.name.toLowerCase().includes(q) ||
         p.ticker.toLowerCase().includes(q) ||
-        p.sector.toLowerCase().includes(q)
-      );
-    }).map((p) => {
+        p.sector.toLowerCase().includes(q),
+    ).map((p) => {
       const quote = quotes[p.id];
       return { p, quote, cap: quote.price * p.hoursOutstanding };
     });
@@ -40,49 +46,21 @@ export function MarketPage() {
       <div className="page-head">
         <div>
           <h1>The Floor</h1>
-          <p>Trade future 1-hour timeslots with the people who'll matter. Prices in TIME$ / hour.</p>
+          <p>Trade future 1-hour timeslots with the people who'll matter.</p>
         </div>
-        <span className="pill live">Market Open</span>
+        <span className="pill live">Live</span>
       </div>
 
-      <div style={{ display: 'flex', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+      <div className="toolbar">
         <input
           className="search"
           placeholder="Search name, ticker or sector…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          style={{
-            flex: 1,
-            minWidth: 220,
-            background: 'var(--bg-2)',
-            border: '1px solid var(--line-2)',
-            color: 'var(--text)',
-            borderRadius: 9,
-            padding: '11px 14px',
-            fontSize: 14,
-            outline: 'none',
-          }}
         />
-        <div className="seg" style={{ margin: 0, gridTemplateColumns: 'repeat(4,auto)' }}>
-          {(
-            [
-              ['changePct', '% Chg'],
-              ['price', 'Price'],
-              ['volume', 'Volume'],
-              ['cap', 'Mkt Cap'],
-            ] as [SortKey, string][]
-          ).map(([k, label]) => (
-            <button
-              key={k}
-              onClick={() => setSort(k)}
-              className={sort === k ? 'active' : ''}
-              style={{
-                background: sort === k ? 'var(--panel-2)' : 'transparent',
-                color: sort === k ? 'var(--text)' : 'var(--muted)',
-                padding: '8px 12px',
-                fontSize: 13,
-              }}
-            >
+        <div className="seg">
+          {SORTS.map(([k, label]) => (
+            <button key={k} onClick={() => setSort(k)} className={sort === k ? 'active' : ''}>
               {label}
             </button>
           ))}
@@ -90,26 +68,10 @@ export function MarketPage() {
       </div>
 
       <div className="board">
-        <div className="board-head">
-          <span>#</span>
-          <span>Person</span>
-          <span className="col-hide" style={{ textAlign: 'right' }}>
-            Sector
-          </span>
-          <span style={{ textAlign: 'right' }}>Last</span>
-          <span style={{ textAlign: 'right' }}>24h</span>
-          <span className="col-hide" style={{ textAlign: 'right' }}>
-            Trend / Cap
-          </span>
-          <span style={{ textAlign: 'right' }}>Trade</span>
-        </div>
-        {rows.map(({ p, quote, cap }, i) => {
+        {rows.map(({ p, quote, cap }) => {
           const up = quote.changePct >= 0;
           return (
             <div className="board-row" key={p.id} onClick={() => navigate(`/trade/${p.id}`)}>
-              <span className="num" style={{ color: 'var(--muted)' }}>
-                {i + 1}
-              </span>
               <div className="asset">
                 <div className="avatar">{p.avatar}</div>
                 <div className="meta">
@@ -117,24 +79,21 @@ export function MarketPage() {
                   <div className="name">{p.name}</div>
                 </div>
               </div>
-              <div className="col-hide" style={{ textAlign: 'right' }}>
-                <span className="sector-tag">{p.sector}</span>
-              </div>
-              <div className="num">{fmtMoney(quote.price)}</div>
-              <div className={`chg ${up ? 'up' : 'down'}`} style={{ justifyContent: 'flex-end' }}>
-                {up ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(2)}%
-              </div>
-              <div
-                className="col-hide"
-                style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12 }}
-              >
+
+              <div className="row-spark">
                 <Sparkline data={quote.history} up={up} />
-                <span className="num" style={{ color: 'var(--muted)', minWidth: 70 }}>
-                  {fmtCompact(cap)}
+                <span className="cap mono">{fmtCompact(cap)}</span>
+              </div>
+
+              <div className="row-right">
+                <div className="row-price">{fmtMoney(quote.price)}</div>
+                <span className={`chg-badge ${up ? 'up' : 'down'}`}>
+                  {up ? '▲' : '▼'} {Math.abs(quote.changePct).toFixed(2)}%
                 </span>
               </div>
+
               <button
-                className="trade-btn"
+                className="trade-btn row-trade"
                 onClick={(e) => {
                   e.stopPropagation();
                   navigate(`/trade/${p.id}`);
