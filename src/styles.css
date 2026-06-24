@@ -1,0 +1,808 @@
+:root {
+  --bg: #070a12;
+  --bg-2: #0b0f1a;
+  --panel: #0e1422;
+  --panel-2: #121a2b;
+  --line: #1c2740;
+  --line-2: #26334f;
+  --text: #e8edf7;
+  --muted: #7d8aa6;
+  --muted-2: #56648400;
+  --up: #16c784;
+  --up-bg: #0f2a22;
+  --down: #ea3943;
+  --down-bg: #2a1316;
+  --accent: #f0b90b;
+  --accent-2: #3b82f6;
+  --mono: 'SFMono-Regular', 'Roboto Mono', 'JetBrains Mono', Menlo, Consolas, monospace;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 50% -10%, #0d1426 0%, transparent 60%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.up {
+  color: var(--up);
+}
+.down {
+  color: var(--down);
+}
+.flat {
+  color: var(--muted);
+}
+
+/* ---------------- App shell ---------------- */
+.app {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 0 22px;
+  height: 58px;
+  border-bottom: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--bg-2), rgba(11, 15, 26, 0.6));
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.brand .logo {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  background: var(--up-bg);
+  border: 1px solid #1d4a3a;
+  border-radius: 8px;
+  font-size: 16px;
+}
+.brand small {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  gap: 4px;
+  margin-left: 6px;
+}
+.nav a {
+  padding: 8px 14px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 14px;
+  transition: 0.15s;
+}
+.nav a:hover {
+  color: var(--text);
+  background: var(--panel);
+}
+.nav a.active {
+  color: var(--text);
+  background: var(--panel-2);
+  box-shadow: inset 0 0 0 1px var(--line-2);
+}
+
+.account {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.acct-stat {
+  text-align: right;
+  line-height: 1.2;
+}
+.acct-stat .label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+.acct-stat .val {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* ---------------- Ticker tape ---------------- */
+.tape {
+  height: 34px;
+  border-bottom: 1px solid var(--line);
+  background: #05070d;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.tape-track {
+  display: inline-flex;
+  gap: 30px;
+  white-space: nowrap;
+  padding-left: 100%;
+  animation: scroll 48s linear infinite;
+}
+.tape:hover .tape-track {
+  animation-play-state: paused;
+}
+@keyframes scroll {
+  to {
+    transform: translateX(-100%);
+  }
+}
+.tape-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.tape-item .sym {
+  color: var(--text);
+  font-weight: 700;
+}
+.tape-item .arrow {
+  font-size: 10px;
+}
+
+/* ---------------- Layout ---------------- */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 22px;
+  flex: 1;
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.page-head h1 {
+  font-size: 24px;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+.page-head p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.pill {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.pill.live {
+  color: var(--up);
+  border-color: #1d4a3a;
+}
+.pill.live::before {
+  content: '';
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--up);
+  margin-right: 6px;
+  box-shadow: 0 0 8px var(--up);
+  animation: pulse 1.4s infinite;
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------------- Market board ---------------- */
+.board {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--panel);
+}
+.board-row,
+.board-head {
+  display: grid;
+  grid-template-columns: 56px 1.6fr 1fr 1fr 1fr 1.2fr 96px;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+}
+.board-head {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+  background: var(--bg-2);
+  border-bottom: 1px solid var(--line);
+}
+.board-row {
+  border-bottom: 1px solid var(--line);
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.board-row:last-child {
+  border-bottom: none;
+}
+.board-row:hover {
+  background: var(--panel-2);
+}
+.asset {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  background: var(--panel-2);
+  border: 1px solid var(--line-2);
+  flex-shrink: 0;
+}
+.asset .meta {
+  min-width: 0;
+}
+.asset .sym {
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 14px;
+}
+.asset .name {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.num {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  font-size: 14px;
+}
+.chg {
+  display: inline-flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 13px;
+}
+.chg-badge {
+  text-align: right;
+}
+.sector-tag {
+  font-size: 11px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  padding: 2px 7px;
+  border-radius: 6px;
+  display: inline-block;
+}
+.trade-btn {
+  justify-self: end;
+  background: var(--up-bg);
+  color: var(--up);
+  border: 1px solid #1d4a3a;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.trade-btn:hover {
+  background: #16432f;
+}
+
+/* ---------------- Cards / grid ---------------- */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 18px;
+}
+.card h3 {
+  margin: 0 0 14px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+.stat-row:last-child {
+  border-bottom: none;
+}
+.stat-row .k {
+  color: var(--muted);
+}
+.stat-row .v {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+
+/* ---------------- Trade page ---------------- */
+.trade-layout {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.quote-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.quote-hero .avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 34px;
+  border-radius: 14px;
+}
+.quote-hero h1 {
+  margin: 0;
+  font-size: 22px;
+}
+.quote-hero .sub {
+  color: var(--muted);
+  font-size: 13px;
+}
+.big-price {
+  font-family: var(--mono);
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+}
+.big-chg {
+  font-family: var(--mono);
+  font-weight: 600;
+  font-size: 15px;
+  margin-top: 4px;
+}
+
+.chart-wrap {
+  margin-top: 8px;
+}
+
+/* ---------------- Order book ---------------- */
+.book-table {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.book-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px;
+  padding: 4px 8px;
+  position: relative;
+  border-radius: 4px;
+}
+.book-row .depth {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  border-radius: 4px;
+  z-index: 0;
+}
+.book-row.ask .depth {
+  background: rgba(234, 57, 67, 0.1);
+}
+.book-row.bid .depth {
+  background: rgba(22, 199, 132, 0.1);
+}
+.book-row span {
+  position: relative;
+  z-index: 1;
+  text-align: right;
+}
+.book-row .price {
+  text-align: left;
+  font-weight: 600;
+}
+.book-spread {
+  text-align: center;
+  color: var(--muted);
+  font-size: 11px;
+  padding: 8px 0;
+  border-block: 1px solid var(--line);
+  margin: 6px 0;
+  letter-spacing: 0.05em;
+}
+
+/* ---------------- Trade ticket ---------------- */
+.ticket {
+  position: sticky;
+  top: 110px;
+}
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: var(--bg-2);
+  padding: 5px;
+  border-radius: 10px;
+}
+.seg button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  padding: 10px;
+  border-radius: 7px;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: 0.15s;
+}
+.seg button.buy.active {
+  background: var(--up);
+  color: #04130d;
+}
+.seg button.sell.active {
+  background: var(--down);
+  color: #1a0608;
+}
+
+.field {
+  margin-bottom: 14px;
+}
+.field label {
+  display: block;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input,
+.field textarea {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line-2);
+  color: var(--text);
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-family: var(--mono);
+  font-size: 15px;
+  outline: none;
+  transition: 0.15s;
+}
+.field textarea {
+  font-family: var(--sans);
+  font-size: 14px;
+  resize: vertical;
+  min-height: 64px;
+}
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent-2);
+}
+.steppers {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+.steppers button {
+  flex: 1;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 7px;
+  padding: 7px;
+  font-family: var(--mono);
+  font-size: 12px;
+  cursor: pointer;
+}
+.steppers button:hover {
+  border-color: var(--line-2);
+  color: var(--text);
+}
+
+.order-summary {
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+}
+.order-summary .row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  padding: 4px 0;
+}
+.order-summary .row .v {
+  font-family: var(--mono);
+  font-weight: 600;
+}
+.order-summary .total {
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 8px;
+  font-size: 15px;
+}
+
+.submit {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  padding: 14px;
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+  letter-spacing: 0.01em;
+  transition: 0.15s;
+}
+.submit.buy {
+  background: var(--up);
+  color: #04130d;
+}
+.submit.sell {
+  background: var(--down);
+  color: #1a0608;
+}
+.submit:hover {
+  filter: brightness(1.08);
+}
+.submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.toast {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.toast.ok {
+  background: var(--up-bg);
+  color: var(--up);
+  border: 1px solid #1d4a3a;
+}
+.toast.err {
+  background: var(--down-bg);
+  color: var(--down);
+  border: 1px solid #4a1d22;
+}
+
+.tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+.tabs button {
+  background: none;
+  border: none;
+  color: var(--muted);
+  padding: 10px 14px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.tabs button.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
+/* ---------------- Portfolio ---------------- */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.kpi {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.kpi .label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+.kpi .value {
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+  margin-top: 6px;
+}
+.kpi .sub {
+  font-family: var(--mono);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.empty {
+  text-align: center;
+  padding: 50px 20px;
+  color: var(--muted);
+}
+.empty .big {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.booking {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+}
+.booking:last-child {
+  border-bottom: none;
+}
+.booking .when {
+  font-family: var(--mono);
+  font-size: 13px;
+}
+.booking .badge {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+.badge.sched {
+  background: #11233f;
+  color: #6ea8fe;
+  border: 1px solid #1c3a63;
+}
+.badge.done {
+  background: var(--up-bg);
+  color: var(--up);
+  border: 1px solid #1d4a3a;
+}
+
+.link-btn {
+  background: none;
+  border: 1px solid var(--line-2);
+  color: var(--muted);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.link-btn:hover {
+  color: var(--text);
+  border-color: var(--muted);
+}
+
+.back {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 14px;
+  display: inline-block;
+}
+.back:hover {
+  color: var(--text);
+}
+
+.blotter {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+.blotter-row {
+  display: grid;
+  grid-template-columns: 60px 1fr 60px 90px 1fr;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  gap: 8px;
+}
+.blotter-row:last-child {
+  border-bottom: none;
+}
+.tag-buy {
+  color: var(--up);
+}
+.tag-sell {
+  color: var(--down);
+}
+
+.thesis {
+  color: var(--muted-2, #9aa7c2);
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .trade-layout {
+    grid-template-columns: 1fr;
+  }
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .board-row,
+  .board-head {
+    grid-template-columns: 44px 1.4fr 1fr 1fr 90px;
+  }
+  .col-hide {
+    display: none;
+  }
+  .nav a {
+    padding: 8px 10px;
+  }
+  .account .acct-stat:first-child {
+    display: none;
+  }
+}
